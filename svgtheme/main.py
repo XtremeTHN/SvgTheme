@@ -24,23 +24,42 @@ def error(*msg, exit_code=1):
     print(f"{Fore.RED}{Style.BRIGHT}error:{Style.RESET_ALL}", *msg)
     sys.exit(exit_code)
 
+def exception(exception: Exception, *msg):
+    print(f"{Fore.RED}{Style.BRIGHT}{exception.__class__.__name__}:{Style.RESET_ALL}", *msg)
+    sys.exit(70)
+ 
 def warn(*msg):
     print(f"{Fore.LIGHTRED_EX}warn:{Style.RESET_ALL}", *msg)
 
 def handle_folder(svg: SvgRecolorer, args: Args, folder: Path):
-    for file, cnt in svg.process_directory(folder, recursive=args.recursive):
+    pattern = "*.svg" if not args.recursive else "**/*.svg"
+    files = folder.glob(pattern)
+
+    for file in files:
         if args.output:
-            (args.output / file.relative_to(folder)).write_text(cnt)
+            path = args.output / file.relative_to(folder)
+            path.parent.mkdir(parents=True, exist_ok=True)
         else:
-            file.write_text(cnt)
+            path = None
+        handle_file(svg, args, file, output=path)
 
 
-def handle_file(svg: SvgRecolorer, args: Args, file: Path):
-    xml = svg.process_file(file)
-    if args.output:
-        (args.output.joinpath(file.name)).write_text(xml)
-    else:
-        file.write_text(xml)
+def handle_file(svg: SvgRecolorer, args: Args, file: Path, output=None):
+    try:
+        xml = svg.process_file(file)
+        out = None
+
+        if output is not None:
+            out = output
+        elif args.output is not None:
+            out = args.output.joinpath(file.name)
+        else:
+            out = file
+        out.write_text(xml)
+
+    except Exception as e:
+        warn(f"couldn't recolor {file}: {e.args}")
+        return
 
 def load_conf() -> list[str]:
     if CONFIG.exists() is False:
