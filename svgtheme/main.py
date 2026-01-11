@@ -152,11 +152,9 @@ def run():
             palette["35"],
         ]
 
-    args.output.mkdir(parents=True, exist_ok=True)
-
     for x in args.FILES_OR_DIR:
         if x.exists() is False:
-            print(f"warn: {x} does not exist")
+            warn(f"{x} does not exist")
             continue
 
         if x.is_dir():
@@ -164,7 +162,7 @@ def run():
             continue
 
         if x.suffix != ".svg":
-            print(f"warn: {x} is not a svg file")
+            warn(f"{x} is not a svg file")
             continue
 
         if x.is_file():
