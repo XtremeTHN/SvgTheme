@@ -10,6 +10,7 @@ from xdg_base_dirs import xdg_config_home
 
 CONFIG = xdg_config_home() / "svgtheme" / "config.json"
 
+
 class Args:
     FILES_OR_DIR: list[Path]
     mono_color: str
@@ -24,12 +25,18 @@ def error(*msg, exit_code=1):
     print(f"{Fore.RED}{Style.BRIGHT}error:{Style.RESET_ALL}", *msg)
     sys.exit(exit_code)
 
+
 def exception(exception: Exception, *msg):
-    print(f"{Fore.RED}{Style.BRIGHT}{exception.__class__.__name__}:{Style.RESET_ALL}", *msg)
+    print(
+        f"{Fore.RED}{Style.BRIGHT}{exception.__class__.__name__}:{Style.RESET_ALL}",
+        *msg,
+    )
     sys.exit(70)
- 
+
+
 def warn(*msg):
     print(f"{Fore.LIGHTRED_EX}warn:{Style.RESET_ALL}", *msg)
+
 
 def handle_folder(svg: SvgRecolorer, args: Args, folder: Path):
     pattern = "*.svg" if not args.recursive else "**/*.svg"
@@ -61,10 +68,11 @@ def handle_file(svg: SvgRecolorer, args: Args, file: Path, output=None):
         warn(f"couldn't recolor {file}: {e.args}")
         return
 
+
 def load_conf() -> list[str]:
     if CONFIG.exists() is False:
         return []
-    
+
     conf: list[str] = json.loads(CONFIG.read_text())
     if isinstance(conf, list) is False:
         error("The config should contain only a list of strings")
@@ -73,13 +81,14 @@ def load_conf() -> list[str]:
     for x in conf:
         if isinstance(x, str) is False:
             error(f"skipping {x} since it's not a string")
-        
+
         if x.startswith("#") is False:
             error(f"invalid hex color: {x}")
-        
+
         sanitized_conf.append(x)
-    
+
     return conf
+
 
 def run():
     parser = argparse.ArgumentParser(
@@ -149,7 +158,7 @@ def run():
 
     if len(args.color) == 0 and len(conf) == 0:
         error("provide at least one color")
-    
+
     args.color.extend(conf)
 
     if args.matugen is not None:
