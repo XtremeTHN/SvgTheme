@@ -27,7 +27,7 @@ def error(*msg, exit_code=1):
 def warn(*msg):
     print(f"{Fore.LIGHTRED_EX}warn:{Style.RESET_ALL}", *msg)
 
-def handle_folder(svg, args: Args, folder):
+def handle_folder(svg: SvgRecolorer, args: Args, folder: Path):
     for file, cnt in svg.process_directory(folder, recursive=args.recursive):
         if args.output:
             (args.output / file.relative_to(folder)).write_text(cnt)
@@ -35,7 +35,7 @@ def handle_folder(svg, args: Args, folder):
             file.write_text(cnt)
 
 
-def handle_file(svg, args: Args, file):
+def handle_file(svg: SvgRecolorer, args: Args, file: Path):
     xml = svg.process_file(file)
 
     if args.output:
