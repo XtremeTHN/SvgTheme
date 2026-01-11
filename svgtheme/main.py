@@ -4,8 +4,11 @@ import json
 import sys
 
 from pathlib import Path
+from colorama import Fore, Style
 from svgtheme.svg import SvgRecolorer
+from xdg_base_dirs import xdg_config_home
 
+CONFIG = xdg_config_home() / "svgtheme" / "config.json"
 
 class Args:
     FILES_OR_DIR: list[Path]
@@ -18,25 +21,54 @@ class Args:
 
 
 def error(*msg, exit_code=1):
-    print("error:", *msg)
+    print(f"{Fore.RED}{Style.BRIGHT}error:{Style.RESET_ALL}", *msg)
     sys.exit(exit_code)
 
-def handle_folder(svg, args, folder):
+def warn(*msg):
+    print(f"{Fore.LIGHTRED_EX}warn:{Style.RESET_ALL}", *msg)
+
+def handle_folder(svg, args: Args, folder):
     for file, cnt in svg.process_directory(folder, recursive=args.recursive):
         if args.output:
             (args.output / file.relative_to(folder)).write_text(cnt)
         else:
             file.write_text(cnt)
 
-def handle_file(svg, args, file):
+
+def handle_file(svg, args: Args, file):
     xml = svg.process_file(file)
+
     if args.output:
         (args.output / file).write_text(xml)
     else:
         file.write_text(xml)
 
+def load_conf() -> list[str]:
+    if CONFIG.exists() is False:
+        return []
+    
+    conf: list[str] = json.loads(CONFIG.read_text())
+    if isinstance(conf, list) is False:
+        error("The config should contain only a list of strings")
+
+    sanitized_conf = []
+    for x in conf:
+        if isinstance(x, str) is False:
+            error(f"skipping {x} since it's not a string")
+        
+        if x.startswith("#") is False:
+            error(f"invalid hex color: {x}")
+        
+        sanitized_conf.append(x)
+    
+    return conf
+
 def run():
-    parser = argparse.ArgumentParser("svgtheme", description="Recolors svg icons with the provided colors",)
+    parser = argparse.ArgumentParser(
+        "svgtheme",
+        description="Recolors svg icons with the provided colors.",
+        epilog="You can define colors in ~/.config/svgtheme/config.json, just define a list and put some hex colors",
+    )
 
     parser.add_argument(
         "FILES_OR_DIR",
@@ -45,12 +77,16 @@ def run():
         help="SVG file or directory containing SVG files to recolor.",
     )
     parser.add_argument(
-        "-r", "--recursive", help="Recursively process directories.", action="store_true"
+        "-r",
+        "--recursive",
+        help="Recursively process directories.",
+        action="store_true",
     )
     parser.add_argument(
         "-c",
         "--color",
         action="append",
+        default=[],
         help="List of hex color codes to use for gradient recoloring. Max of 6",
     )
     parser.add_argument(
@@ -62,27 +98,41 @@ def run():
         "-o",
         "--output",
         action="store",
-        help="The recolored svg files will be stored in this folder. If not defined, the colored svg will replace the original svg",
+        help="A path to a folder where the svg files will be stored, it will be created if the folder doesn't exist. If not defined, the colored svg will replace the original svg",
         type=Path,
     )
     parser.add_argument(
-        "--matugen",
+        "--from-matugen-json",
         action="store",
+        dest="matugen",
         type=Path,
         help="Reads a matugen json containing the generated colors",
     )
     parser.add_argument(
         "--palette",
         action="store",
-        choices=["error", "neutral", "neutral_variant", "primary", "secondary", "tertiary"],
+        choices=[
+            "error",
+            "neutral",
+            "neutral_variant",
+            "primary",
+            "secondary",
+            "tertiary",
+        ],
         help="Select a matugen palette to use for recoloring",
     )
     args: Args = parser.parse_args()
+    conf = load_conf()
 
     svg = SvgRecolorer(args.color, args.mono_color)
 
     if args.output is not None:
         args.output.mkdir(exist_ok=True, parents=True)
+
+    if len(args.color) == 0 and len(conf) == 0:
+        error("provide at least one color")
+    
+    args.color.extend(conf)
 
     if args.matugen is not None:
         if args.matugen.is_file() is False:
@@ -101,6 +151,8 @@ def run():
             palette["35"],
             palette["35"],
         ]
+
+    args.output.mkdir(parents=True, exist_ok=True)
 
     for x in args.FILES_OR_DIR:
         if x.exists() is False:

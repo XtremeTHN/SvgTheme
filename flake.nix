@@ -13,7 +13,10 @@
       pkgs = nixpkgs.legacyPackages.${system};
       
       nativeBuildInputs = with pkgs; [
-        python314
+        (python314.withPackages (ps: with ps; [
+          xdg-base-dirs
+          colorama
+        ]))
         meson
         ninja
       ];
