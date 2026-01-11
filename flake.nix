@@ -11,12 +11,13 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      python = (pkgs.python314.withPackages (ps: with ps; [
+        xdg-base-dirs
+        colorama
+      ]));
       
       nativeBuildInputs = with pkgs; [
-        (python314.withPackages (ps: with ps; [
-          xdg-base-dirs
-          colorama
-        ]))
+        python
         meson
         ninja
       ];
