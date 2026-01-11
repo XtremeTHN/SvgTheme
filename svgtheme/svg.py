@@ -214,11 +214,7 @@ class SvgRecolorer:
                 continue
 
     def process_file(self, svg_file: Path) -> str:
-        try:
-            doc = self.get_xml_doc(svg_file)
-        except Exception as e:
-            print(f"error while parsing svg: {e.args}")
-            return
+        doc = self.get_xml_doc(svg_file)
 
         layers, colors_found = self.get_svg_layers(doc)
 
