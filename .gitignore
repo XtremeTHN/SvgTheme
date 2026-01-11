@@ -1,5 +1,5 @@
 /.direnv
-/flake.lock
 /orig.py
 /script.py
 __pycache__
+result

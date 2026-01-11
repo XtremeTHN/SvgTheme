@@ -11,21 +11,27 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      python = (
-        pkgs.python3.withPackages (
-          ps: with ps; [
-            pyqt6
-          ]
-        )
-      );
+      
+      nativeBuildInputs = with pkgs; [
+        python314
+        meson
+        ninja
+      ];
     in
     {
       devShells.${system}.default = pkgs.mkShell {
+        inherit nativeBuildInputs;
         packages = [
-          python
-          pkgs.pkg-config
           pkgs.ruff
         ];
+      };
+
+      packages.${system}.default = pkgs.stdenv.mkDerivation {
+        name = "svgtheme";
+        version = "0.1.0";
+        src = ./.;
+
+        inherit nativeBuildInputs;
       };
     };
 }
