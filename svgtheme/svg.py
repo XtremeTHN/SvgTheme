@@ -232,12 +232,3 @@ class SvgRecolorer:
         self.recolor_svg(layers, unique_colors, len(colors_found) <= 1)
 
         return doc.toxml()
-
-    def process_directory(
-        self, directory: Path, recursive=False
-    ) -> Generator[tuple[Path, str]]:
-        pattern = "*.svg" if not recursive else "**/*.svg"
-        files = directory.glob(pattern)
-
-        for x in files:
-            yield x, self.process_file(x)
