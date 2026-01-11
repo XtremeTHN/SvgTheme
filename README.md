@@ -19,7 +19,8 @@ Create a config file at `~/.config/svgtheme/config.json` and define an array of 
     "#98c379",
     "#e06c75",
     "#c678dd",
-]```
+]
+```
 The colors defined in this file are appended to the colors passed as command-line arguments.
 
 ## Usage
