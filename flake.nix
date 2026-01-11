@@ -17,14 +17,17 @@
       ]));
       
       nativeBuildInputs = with pkgs; [
-        python
         meson
         ninja
+      ];
+
+      buildInputs = with pkgs; [
+        python
       ];
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        inherit nativeBuildInputs;
+        inherit nativeBuildInputs buildInputs;
         packages = [
           pkgs.ruff
         ];
@@ -35,7 +38,8 @@
         version = "0.1.0";
         src = ./.;
 
-        inherit nativeBuildInputs;
+
+        inherit nativeBuildInputs buildInputs;
       };
     };
 }
