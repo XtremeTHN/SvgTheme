@@ -37,9 +37,8 @@ def handle_folder(svg: SvgRecolorer, args: Args, folder: Path):
 
 def handle_file(svg: SvgRecolorer, args: Args, file: Path):
     xml = svg.process_file(file)
-
     if args.output:
-        (args.output / file).write_text(xml)
+        (args.output.joinpath(file.name)).write_text(xml)
     else:
         file.write_text(xml)
 
