@@ -1,10 +1,9 @@
 # modified version of https://www.reddit.com/r/unixporn/comments/1q6ngwh/oc_auto_svg_icon_recolorer_to_match_every_icon_to/
 # i just copied and refactored the class that recolors the svgs
-
+from typing import Generator, Sequence, SupportsInt, Tuple, Set
+from xml.dom import minidom
 from pathlib import Path
 import re
-from typing import Generator
-from xml.dom import minidom
 
 
 class SvgRecolorer:
@@ -28,11 +27,11 @@ class SvgRecolorer:
         "aqua": "#00ffff",
     }
 
-    def __init__(self, colors: list[str], mono_color: str):
+    def __init__(self, colors: Sequence[str], mono_color: str):
         self.colors: list[str] = colors
         self.mono_color = mono_color
 
-    def hex_to_rgb(self, _hex: str):
+    def hex_to_rgb(self, _hex: str) -> Tuple[SupportsInt, ...]:
         try:
             _hex = _hex.lstrip("#")
             if len(_hex) == 3:
@@ -43,11 +42,11 @@ class SvgRecolorer:
             print(e.__class__.___name__, e.args)
             return (0, 0, 0)
 
-    def rgb_to_hex(self, rgb: list[str]):
+    def rgb_to_hex(self, rgb: Sequence[SupportsInt]) -> str:
         rgb = [int(x) for x in rgb]
         return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
-    def interpolate_color(self, first, second, factor):
+    def interpolate_color(self, first: str, second: str, factor: SupportsInt) -> str:
         try:
             rgb1 = self.hex_to_rgb(first)
             rgb2 = self.hex_to_rgb(second)
@@ -98,7 +97,7 @@ class SvgRecolorer:
 
         return self.NAMED_COLORS.get(color)
 
-    def get_gradient_colors(self, num_colors):
+    def get_gradient_colors(self, num_colors: SupportsInt) -> Sequence[str]:
         base_colors = self.colors
         num_base_colors = len(base_colors)
 
@@ -132,7 +131,9 @@ class SvgRecolorer:
         svg_content = file.read_text().replace('xmlns="http://www.w3.org/2000/svg"', "")
         return minidom.parseString(svg_content)
 
-    def get_svg_layers(self, doc: minidom.Document):
+    def get_svg_layers(
+        self, doc: minidom.Document
+    ) -> Tuple[Sequence[Tuple[minidom.Element, str, str, str]], Set[str]]:
         layers = []
         colors_found = set()
 
@@ -171,7 +172,7 @@ class SvgRecolorer:
 
         return layers, colors_found
 
-    def sub_elem(prop, new, orig, style):
+    def sub_elem(self, prop: str, new: str, orig: str, style: str):
         return re.sub(
             f"{prop}\\s*{re.escape(orig)}",
             f"{prop}:{new}",
@@ -179,7 +180,12 @@ class SvgRecolorer:
             flags=re.IGNORECASE,
         )
 
-    def recolor_svg(self, layers, unique_colors, monochrome: bool):
+    def recolor_svg(
+        self,
+        layers: Sequence[Tuple[minidom.Element, Tuple, str, str]],
+        unique_colors: Sequence[str],
+        monochrome: bool,
+    ) -> None:
         gradient_colors = self.get_gradient_colors(len(unique_colors))
         color_map = dict(zip(unique_colors, gradient_colors))
 
